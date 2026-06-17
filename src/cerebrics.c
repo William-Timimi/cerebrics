@@ -179,3 +179,152 @@ CBR_Status cbr_tensor_fill(CBR_Tensor *t, float value) {
     }
     return CBR_OK;
 }
+
+/*------------------------------------------------------------
+-   Mathmatical operations for tensors                       -
+------------------------------------------------------------*/
+
+static int are_ts_same_shape(CBR_Tensor *a, CBR_Tensor *b) {
+    if (!a || !b) {
+        return 0;
+    }
+    // checks both tensors have same number of dimensions
+    // then checks each dimension is of same size
+    if (a->ndim != b->ndim) return 0;
+    for (int i = 0; i < a->ndim; i++) {
+        if (a->shape[i] != b->shape[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+CBR_Tensor *cbr_add(CBR_Tensor *a, CBR_Tensor *b) {
+    // can only add tensors of same shape
+    if (!are_ts_same_shape(a, b)) {
+        return NULL;
+    }
+
+    // Creates output tensor, returns null if creation unsucsessful
+    CBR_Tensor *out = cbr_tensor_create(a->ndim, a->shape, a->requires_grad || b->requires_grad);
+    if (!out) {
+        return NULL;
+    }
+
+    // loops through every element and sets it as elwise addition
+    for (int i = 0; i < out->size; i++) {
+        out->data[i] = a->data[i] + b->data[i];
+    }
+    return out;
+}
+
+CBR_Tensor *cbr_sub(CBR_Tensor *a, CBR_Tensor *b) {
+    // can only subtract tensors of same shape
+    if (!are_ts_same_shape(a, b)) {
+        return NULL;
+    }
+
+    // Creates output tensor, returns null if creation unsucsessful
+    CBR_Tensor *out = cbr_tensor_create(a->ndim, a->shape, a->requires_grad || b->requires_grad);
+    if (!out) {
+        return NULL;
+    }
+
+    // loops through every element and sets it as elwise subtraction
+    for (int i = 0; i < out->size; i++) {
+        out->data[i] = a->data[i] - b->data[i];
+    }
+    return out;
+}
+
+CBR_Tensor *cbr_mul(CBR_Tensor *a, CBR_Tensor *b) {
+    // can only multiply tensors of same shape
+    if (!are_ts_same_shape(a, b)) {
+        return NULL;
+    }
+
+    // Creates output tensor, returns null if creation unsucsessful
+    CBR_Tensor *out = cbr_tensor_create(a->ndim, a->shape, a->requires_grad || b->requires_grad);
+    if (!out) {
+        return NULL;
+    }
+
+    // loops through every element and sets it as elwise multiplication
+    for (int i = 0; i < out->size; i++) {
+        out->data[i] = a->data[i] * b->data[i];
+    }
+    return out;
+}
+
+CBR_Tensor *cbr_scalmul(float f, CBR_Tensor *t) {
+
+    // Creates output tensor, returns null if creation unsucsessful
+    CBR_Tensor *out = cbr_tensor_create(t->ndim, t->shape, t->requires_grad);
+    if (!out) {
+        return NULL;
+    }
+
+    // loops through every element and multiplies it by the scaler
+    for (int i = 0; i < out->size; i++) {
+        out->data[i] = t->data[i] * f;
+    }
+    return out;
+}
+
+CBR_Tensor *cbr_matmul(CBR_Tensor *a, CBR_Tensor *b) {
+    // can only do matrix multiplaction with matrices
+    if (!a || !b || a->ndim != 2 || b->ndim != 2) {
+        return NULL;
+    }
+
+    // checks matrices have dimensions that can be multiplied
+    if (a->shape[1] != b->shape[0]) {
+        return NULL;
+    }
+
+    // gets new shape and creates new tensor
+    int m = a->shape[0];
+    int n = b->shape[1];
+    int k = b->shape[1];
+    int shape[2] = {m, n};
+    CBR_Tensor *out = cbr_tensor_create(2, shape, a->requires_grad || b->requires_grad);
+    if (!out) return NULL;
+
+    // loops through and works out the value of each element
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            float acc = 0.0f;
+            for (int p = 0; p < k; p++) {
+                acc += a->data[i * k + p] * b->data[p * n + j];
+            }
+            out->data[i * n + j] = acc;
+        }
+    }
+
+    return out;
+}
+
+CBR_Tensor *cbr_relu(CBR_Tensor *x) {
+    if (!x) return NULL;
+    CBR_Tensor *out = cbr_tensor_create(x->ndim, x->shape, x->requires_grad);
+    if (!out) return NULL;
+
+    for (int i = 0; i < x->size; i++) {
+        out->data[i] = x->data[i] > 0.0f ? x->data[i] : 0.0f;
+    }
+
+    return out;
+}
+
+CBR_Tensor *cbr_sum(CBR_Tensor *x) {
+    if (!x) return NULL;
+    int shape[1] = {1};
+    CBR_Tensor *out = cbr_tensor_create(1, shape, x->requires_grad);
+    if (!out) return NULL;
+    float acc = 0.0f;
+    for (int i = 0; i < x->size; i++) {
+        acc += x->data[i];
+    }
+    out->data[0] = acc;
+    return out;
+}
