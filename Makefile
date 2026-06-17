@@ -56,6 +56,9 @@ TIDY_FILES := src/*.c tests/*.c examples/*.c
 format:
 	clang-format -i $(FORMAT_FILES)
 
+format-check:
+	clang-format --dry-run --Werror $(FORMAT_FILES)
+
 lint:
 	clang-tidy $(TIDY_FILES) -- $(LINT_FLAGS)
 

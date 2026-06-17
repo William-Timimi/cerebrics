@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  c-checks:
+    name: C checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install C tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang clang-tidy clang-format make
+
+      - name: Check formatting
+        run: make format-check
+
+      - name: Build and run C tests
+        run: make test-c
+
+      - name: Run clang-tidy
+        run: make lint
