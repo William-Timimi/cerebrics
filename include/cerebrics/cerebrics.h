@@ -37,6 +37,15 @@ CBR_Status cbr_tensor_get(const CBR_Tensor *t, const int *indices, float *out_va
 CBR_Status cbr_tensor_set(CBR_Tensor *t, const int *indices, float value);
 void cbr_tensor_zero_grad(CBR_Tensor *t);
 
+// Mathmatical operations for tensors
+CBR_Tensor *cbr_add(CBR_Tensor *a, CBR_Tensor *b);
+CBR_Tensor *cbr_sub(CBR_Tensor *a, CBR_Tensor *b);
+CBR_Tensor *cbr_mul(CBR_Tensor *a, CBR_Tensor *b);
+CBR_Tensor *cbr_scalmul(float f, CBR_Tensor *t);
+CBR_Tensor *cbr_matmul(CBR_Tensor *a, CBR_Tensor *b);
+CBR_Tensor *cbr_relu(CBR_Tensor *x);
+CBR_Tensor *cbr_sum(CBR_Tensor *x);
+
 #ifdef __cplusplus
 }
 #endif
