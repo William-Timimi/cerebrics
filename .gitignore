@@ -1,0 +1,10 @@
+build/
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+*.egg-info/
+__pycache__/
+.pytest_cache/
+data/
