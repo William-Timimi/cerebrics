@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*------------------------------------------------------------
+-   Functions for creating and freeing tensors               -
+------------------------------------------------------------*/
+
 static CBR_Status cbr_tensor_init_shape(CBR_Tensor *t, int ndim, const int *shape) {
     if (!t || !shape) {
         return CBR_ERR_INVALID_ARGUMENT;
@@ -71,73 +75,9 @@ void cbr_tensor_free(CBR_Tensor *t) {
     free(t);
 }
 
-void cbr_tensor_zero_grad(CBR_Tensor *t) {
-    if (!t) {
-        return;
-    }
-    if (t->grad) {
-        memset(t->grad, 0, sizeof(float) * (size_t)t->size);
-    }
-}
-
-CBR_Status cbr_tensor_fill(CBR_Tensor *t, float value) {
-    if (!t) {
-        return CBR_ERR_INVALID_ARGUMENT;
-    }
-    for (int i = 0; i < t->size; i++) {
-        t->data[i] = value;
-    }
-    return CBR_OK;
-}
-
-CBR_Status cbr_get_flat_index(const CBR_Tensor *t, const int *indices, int *flat_index_out) {
-    if (!t || !indices || !flat_index_out) {
-        return CBR_ERR_INVALID_ARGUMENT;
-    }
-
-    int flat_index = 0;
-    for (int i = 0; i < t->ndim; i++) {
-        int index = indices[i];
-        if (index < 0 || index >= t->shape[i]) {
-            return CBR_ERR_OUT_OF_BOUNDS;
-        }
-
-        flat_index += index * t->strides[i];
-    }
-
-    *flat_index_out = flat_index;
-    return CBR_OK;
-}
-
-// Given a serries of indices, gets the value at that position in the
-// tensor and sets out_value to it.
-// returns 0 for a success and 1 for an out of bounds error.
-CBR_Status cbr_tensor_get(const CBR_Tensor *t, const int *indices, float *out_value) {
-    if (!out_value) {
-        return CBR_ERR_INVALID_ARGUMENT;
-    }
-
-    int flat_index = 0;
-    CBR_Status status = cbr_get_flat_index(t, indices, &flat_index);
-    if (status != CBR_OK) {
-        return status;
-    }
-
-    *out_value = t->data[flat_index];
-    return CBR_OK;
-}
-
-CBR_Status cbr_tensor_set(CBR_Tensor *t, const int *indices, float value) {
-
-    int flat_index = 0;
-    CBR_Status status = cbr_get_flat_index(t, indices, &flat_index);
-    if (status != CBR_OK) {
-        return status;
-    }
-
-    t->data[flat_index] = value;
-    return CBR_OK;
-}
+/*------------------------------------------------------------
+-   Get the different properties of a tensor                 -
+------------------------------------------------------------*/
 
 int cbr_num_el(CBR_Tensor *t) {
     if (!t) {
@@ -165,4 +105,77 @@ int cbr_shape(CBR_Tensor *t, int axis) {
         return -1;
     }
     return t->shape[axis];
+}
+
+/*------------------------------------------------------------
+-   functions to get and set data in a tensor                -
+------------------------------------------------------------*/
+
+CBR_Status cbr_get_flat_index(const CBR_Tensor *t, const int *indices, int *flat_index_out) {
+    if (!t || !indices || !flat_index_out) {
+        return CBR_ERR_INVALID_ARGUMENT;
+    }
+
+    int flat_index = 0;
+    for (int i = 0; i < t->ndim; i++) {
+        int index = indices[i];
+        if (index < 0 || index >= t->shape[i]) {
+            return CBR_ERR_OUT_OF_BOUNDS;
+        }
+
+        flat_index += index * t->strides[i];
+    }
+
+    *flat_index_out = flat_index;
+    return CBR_OK;
+}
+
+// Given a serries of indices, gets the value at that position in the
+// tensor and sets out_value to it.
+// returns 0 for a success and 1 for an out of bounds error.
+
+CBR_Status cbr_tensor_get(const CBR_Tensor *t, const int *indices, float *out_value) {
+    if (!out_value) {
+        return CBR_ERR_INVALID_ARGUMENT;
+    }
+
+    int flat_index = 0;
+    CBR_Status status = cbr_get_flat_index(t, indices, &flat_index);
+    if (status != CBR_OK) {
+        return status;
+    }
+
+    *out_value = t->data[flat_index];
+    return CBR_OK;
+}
+
+CBR_Status cbr_tensor_set(CBR_Tensor *t, const int *indices, float value) {
+
+    int flat_index = 0;
+    CBR_Status status = cbr_get_flat_index(t, indices, &flat_index);
+    if (status != CBR_OK) {
+        return status;
+    }
+
+    t->data[flat_index] = value;
+    return CBR_OK;
+}
+
+void cbr_tensor_zero_grad(CBR_Tensor *t) {
+    if (!t) {
+        return;
+    }
+    if (t->grad) {
+        memset(t->grad, 0, sizeof(float) * (size_t)t->size);
+    }
+}
+
+CBR_Status cbr_tensor_fill(CBR_Tensor *t, float value) {
+    if (!t) {
+        return CBR_ERR_INVALID_ARGUMENT;
+    }
+    for (int i = 0; i < t->size; i++) {
+        t->data[i] = value;
+    }
+    return CBR_OK;
 }
